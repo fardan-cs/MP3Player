@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Drag and Drop Reordering</title>
+
+  <style>
+    #container {
+      width: 400px;
+      margin: 50px auto;
+    }
+
+    .item {
+      padding: 20px;
+      margin: 10px 0;
+      background: #eee;
+      border: 1px solid #ccc;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .item.dragging {
+      opacity: 0.5;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="container">
+  <div class="item">
+    <span class="drag-handle" draggable="true">☰</span>
+    <span>Item 1</span>
+  </div>
+
+  <div class="item">
+    <span class="drag-handle" draggable="true">☰</span>
+    <span>Item 2</span>
+  </div>
+
+  <div class="item">
+    <span class="drag-handle" draggable="true">☰</span>
+    <span>Item 3</span>
+  </div>
+</div>
+
+  <script>
+const container = document.getElementById("container");
+
+let draggedItem = null;
+
+// Start dragging from the handle
+container.addEventListener("dragstart", (e) => {
+  if (e.target.classList.contains("drag-handle")) {
+    draggedItem = e.target.closest(".item");
+
+    draggedItem.classList.add("dragging");
+
+    // Store the dragged item's data
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", "");
+  } else {
+    e.preventDefault();
+  }
+});
+
+// Handle the end of dragging
+container.addEventListener("dragend", () => {
+  if (draggedItem) {
+    draggedItem.classList.remove("dragging");
+    draggedItem = null;
+  }
+});
+
+// Reorder items while dragging
+container.addEventListener("dragover", (e) => {
+  e.preventDefault();
+
+  if (!draggedItem) return;
+
+  const items = [
+    ...container.querySelectorAll(".item:not(.dragging)")
+  ];
+
+  const nextItem = items.find((item) => {
+    const rect = item.getBoundingClientRect();
+
+    return e.clientY < rect.top + rect.height / 2;
+  });
+
+  if (nextItem) {
+    container.insertBefore(draggedItem, nextItem);
+  } else {
+    container.appendChild(draggedItem);
+  }
+});
+  </script>
+
+</body>
+</html>

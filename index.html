@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css" integrity="sha512-ApSLB1Pd3/bZN8fWB/RG9YhN/7bd9Hkf3AGaE2mPfebjrxagjuBtx2GcgdqIlJkUzwylBo61r9Xa9NmgBI0swA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-image" id="background-image"></div>
+  <div id="drop-overlay">
+    <span>
+        <i class="fa-solid fa-file-audio" style="font-size: 60px;"></i>
+        <p> Drop Anywhere to Upload Your Songs </p>
+    </span>
+  </div>
+    <div class="playlistSidebar" id="playlistBar">
+        <div style="display: flex; align-items: center; margin-top: 10px; gap: 10px; padding-left: 15px;">
+            <div id="playlistBack" onclick="document.getElementById('songList').style.display='none'; 
+                                            document.getElementById('playlistList').style.display='block';
+                                            document.getElementById('playlistBack').style.display='none'
+                                            document.getElementById('playlistInfo').style.display='none';
+                                            document.getElementById('playlistInfoHr').style.display='none';
+                                            document.querySelectorAll('.editPlaylistButton').forEach(div => {
+                                                div.style.display = 'none';
+                                            })
+                                            document.getElementById('playlistName').innerText = 'Playlist';"
+                style="cursor: pointer; height: 100%; padding-right: 10px; align-items: center;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </div>
+            <p id="playlistName" style="font-weight: 800;">Playlist</p>
+            <input type="text" name="playlistName" id="playlistNameChange">
+            <i data-lucide="square-pen" style="width: 20px; height: 20px; display: none;" class="editPlaylistButton" id="editName" onclick="playlistNameChange()"></i>  
+            <i class="fa-solid fa-check" id="enterNewName" style="font-size: 18px; display: none;" onclick="renamePlaylist(openedPlaylist)"></i>
+            <div style="color: #EC7E7E; position: absolute; right: 35px; cursor: pointer; display: flex; height: 50px; padding: 0px 10px 0px 10px; align-items: center;" onclick="handleDeletePlaylist()">
+                <i data-lucide="trash" style="width: 20px; height: 20px; display: none;" class="editPlaylistButton"></i>  
+            </div>
+            <div style="position: absolute; right: 65px; cursor: pointer; display: flex; height: 50px; padding: 0px 10px 0px 10px; align-items: center;" onclick="document.getElementById('manageSongOverlay').style.display = 'block'; renderSongSelectionList(document.getElementById('manageSongSelection'), false)">
+                <i data-lucide="list-plus" style="width: 20px; height: 20px; display: none;" class="editPlaylistButton"></i>  
+            </div>
+            <!-- <div id="managePlaylist" style="position: absolute; right: 35px; cursor: pointer; display: flex; height: 50px; padding: 0px 10px 0px 10px; align-items: center;" onclick="document.getElementById('audioFormOverlay').style.display = 'block'">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+            </div> -->
+            <div style="position: absolute; right: 5px; cursor: pointer; display: flex; height: 50px; padding: 0px 10px 0px 10px; align-items: center;" onclick="document.getElementById('playlistBar').style.width= 0;">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+        </div> 
+        <hr style="width: 95%;">
+        <div style="padding: 20px; display: none;" id="playlistInfo" onclick="">
+            <div style="display: flex; align-items: center; gap: 20px; height: 20px; margin-bottom: 5px;">
+                <div id="playlistPlay" class="0">
+                    <i class="fa-solid fa-play"></i>
+                </div>
+                <div>
+                    <p style="margin: 0;">Play Playlist</p>
+                    <p style="font-size: 13px; margin: 0;" id="playlistInfos"> 3 songs • 12m 34s </p>
+                </div>
+            </div>
+        </div> 
+        <hr style="width: 95%; margin-top: 10px; display: none;" id="playlistInfoHr">
+        <div id="playlistList" style="margin-bottom: 60px;"></div>
+        <div id="songList" style="position: relative; margin-bottom: 60px;"></div>
+        <div style="position: absolute; bottom: 0; width: 100%;">
+            <hr style="margin-bottom: 0;">
+            <div style="display: flex; text-align: center;">
+                <div onclick="renderNewPlaylistSelection()" style="width: 50%; padding: 20px 0px 20px 0px; background-color: black; cursor: pointer; border-right: solid 2px #555555;" id="addPlaylist">
+                    <i class="fa-solid fa-plus"></i>
+                    New Playlist
+                </div>
+                <div onclick="document.getElementById('audioFormOverlay').style.display = 'block'" style="width: 50%; padding: 20px 2px 20px 0px; background-color: black; cursor: pointer;" id="addPlaylist">
+                    <i class="fa-solid fa-plus"></i>
+                    Upload Song
+                </div>
+            </div>
+        </div>
+    </hr>
+    </div>
+    <div id="modalOverlay" class="overlay">
+        <div class="modal" id="popupModal">
+        </div>
+    </div>
+    <div id="manageSongOverlay" class="overlay">
+        <div class="modal" id="manageSongModal">
+            <div style="display: flex; width: 100%; justify-content: space-between;">
+                <div>Manage playlist song</div>
+                <div style="width: 50px; height: 30px; text-align: right; cursor: pointer;" onclick="document.getElementById('manageSongOverlay').style.display = 'none'; document.getElementById('manageSongSelection').innerHTML = null">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div id="manageSongSelection">
+
+            </div>
+            <div style="display: flex; width: 25%; margin-left: auto; margin-right: 0; justify-content: space-between; margin-top: 10px; cursor: pointer;">
+                <div onclick="document.getElementById('manageSongOverlay').style.display = 'none'; document.getElementById('manageSongSelection').innerHTML = null">
+                    Discard
+                </div>
+                <div onclick="overwritePlaylist(openedPlaylist)" style="cursor: pointer;">
+                    Save
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="audioFormOverlay" class="overlay">
+        <form id="audioForm" class="modal">
+            <div style="position: absolute; right: 5px; cursor: pointer; display: flex; height: 20px; padding: 0px 10px 0px 10px; align-items: center;" onclick="document.getElementById('audioFormOverlay').style.display = 'none';">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+
+            <br><br>
+
+            <label>
+            <input type="file" id="imageFile" accept="image/*" style="display: none;">
+            <div for="imageFile" id="imageFileInput">
+                <p>
+                    <i class="fa-regular fa-camera"></i>
+                    <br>
+                    Add cover image
+                </p>
+            </div>
+            </label>
+
+            <br><br>
+
+            <label>
+            <i class="fa-solid fa-music"></i>
+            Audio:
+            <input type="file" id="audioFile" accept="audio/*" required autocomplete="off">
+            </label>
+
+            <br><br>
+
+            <label>
+            Title:
+            <input type="text" id="title" autocomplete="off" required>
+            </label>
+
+            <br><br>
+
+            <label>
+            Artist:
+            <input type="text" id="artist" autocomplete="off" required>
+            </label>
+
+            <br><br>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <div id="songSelectionOverlay" class="overlay">
+        <div id="songSelection" style="text-align: left;" class="modal">
+            <div style="display: flex; width: 100%; justify-content: space-between;">
+                <div>Create New Playlist</div>
+                <div style="width: 50px; height: 30px; text-align: right; cursor: pointer;" onclick="document.getElementById('songSelectionOverlay').style.display = 'none'; document.getElementById('songSelectionList').innerHTML = null">
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-start; width: 100%; margin-bottom: 10px;">
+                <div>
+                    <p>Playlist Name</p>
+                    <input type="text" autocomplete="off" id="playlistNameInput">
+                </div>                    
+            </div>
+            <div style="display: flex; justify-content: flex-start; width: 100%;">
+                <p>Add Songs</p>
+            </div>
+            <div id="songSelectionList"> 
+            </div>
+            <div style="display: flex; width: 40%; margin-left: auto; margin-right: 0; justify-content: space-between; margin-top: 10px; cursor: pointer;">
+                <div onclick="document.getElementById('songSelectionOverlay').style.display = 'none'; document.getElementById('songSelectionList').innerHTML = null">
+                    Cancel
+                </div>
+                <div onclick="createPlaylist()" style="cursor: pointer;">
+                    Create Playlist
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="main">
+    <div style="position: fixed; left: 0px; top: 0px; padding: 20px; z-index: 3; cursor: pointer;" onclick="document.getElementById('playlistBar').style.width = '500px'">
+        <i data-lucide="list-music"></i>   
+    </div>
+    <div class="contents"> 
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="songInfo">
+                <img src="" id="coverArt">
+                <p id="songName"></p>
+                <p id="songArtist" style="margin-bottom: 0;"></p>
+            </div>
+            <audio id="song" preload="metadata">
+                <source src="">
+            </audio>
+            <div class="controls">
+                <div id="seekbar" style="display: flex; flex-direction:column; margin-top: 10px; justify-content: center;">
+                    <input type="range" min="0" max="1000" value="0" id="durationSeekbar" style="width: 400px;">
+                    <div style="display: flex; justify-content: center;">
+                        <p id="currentTime">0:00/</p>
+                        <p id="duration">3:14</p>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 30px; align-items: center;">
+                    <button onclick="isShuffle = !isShuffle ; this.style.color = isShuffle? 'lime' : 'white';" class="buttons shuffle" id="shuffle"><i class="fa-solid fa-shuffle"></i></button>
+                    <button onclick="changeTrack(-1)" class="buttons backward"><i class="fa-solid fa-backward-step"></i></button>
+                    <button onclick="togglePlayback()" class="buttons play" id="playButton"><i class="fa-solid fa-play" ></i></button>
+                    <button onclick="changeTrack(1)" class="buttons forward"><i class="fa-solid fa-forward-step" ></i></button>
+                    <button onclick="isLooped = !isLooped; this.style.color = isLooped ? 'lime' : 'white';" class="buttons repeat" id="repeat"><i class="fa-solid fa-repeat"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="volume">
+        <div id="volumeIcon"><i class="fa-solid fa-volume" ></i></div>
+        <input type="range" min="0" max="100" value="20" class="volumeSlider" id="volumeSlider" oninput="updateSliderVisual(this)">
+    </div>
+</body>
+<script src="db.js"></script>
+<script src="main.js"></script>
+</html>
