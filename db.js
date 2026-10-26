@@ -27,8 +27,6 @@ function openDatabase() {
             database.createObjectStore("playlists", {
                 keyPath: "id"
             });
-            
-            makeNewPlaylist('All', [])
         };
 
         request.onsuccess = (event) => {
@@ -146,7 +144,9 @@ async function init() {
 init();
 
 async function addNewSongToPlaylist(id) {
-    const allPlaylist = await getItem('playlists', 0)
+    let allPlaylist = await getItem('playlists', 0)
+    !allPlaylist && (await makeNewPlaylist('All', []), allPlaylist = await getItem('playlists', 0))
+    console.log(allPlaylist)
     allPlaylist.list.push(id)
     addItem('playlists', allPlaylist)
     playlist = await getAllItem('playlists');
@@ -154,7 +154,8 @@ async function addNewSongToPlaylist(id) {
     const song = songs.find(song => song.id === id)
     const duration = song.duration; 
 
-    chosenPlaylistIndex === 0 && document.getElementById('playlistInfo').style.display === 'block' && renderSongDiv(0, song, duration)
+    songs.length === 1 && renderSong(playlist[0].list[0]), updateEmptyState()
+    openedPlaylist === 0 && document.getElementById('playlistInfo').style.display === 'block' && (renderSongDiv(0, song, duration))
 }
 
 async function submitSong(event) {
@@ -309,8 +310,7 @@ async function removePlaylist(chosenPlaylistIndex) {
 }
 
 function updateEmptyState() {
-    const empty = !playlist[0];
-    console.log(empty)
+    const empty = !playlist[0] || !playlist[0].list.length;
     document.getElementById('emptyState').style.display = empty ? 'flex' : 'none';
     document.querySelector('.contents').style.display = empty ? 'none' : 'flex';
 }
