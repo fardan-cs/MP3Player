@@ -40,13 +40,12 @@ function addNewPlaylist(songName, artist, art, audio, duration) {
 async function removeSongFromPlaylist(id) {
     const selectedPlaylist = playlist[openedPlaylist]
     const songIndex = selectedPlaylist.list.indexOf(id);
-    console.log(selectedPlaylist)
 
     if (songIndex !== -1) {
         selectedPlaylist.list.splice(songIndex, 1); 
     }
 
-    renderPlaylist(openedPlaylist)
+    document.getElementById(`${id}:${openedPlaylist}`).remove()
     addItem('playlists', selectedPlaylist)
 }
 
@@ -62,6 +61,41 @@ async function renamePlaylist() {
     selectedPlaylist.name = name
     await addItem('playlists', selectedPlaylist)
     renderPlaylistList()
+}
+
+async function renderSongDiv(chosenPlaylistIndex, song, duration) {
+    const imageFile = await getItem('imageFiles', song.id)
+    const imageURL = URL.createObjectURL(imageFile.blob)
+
+    const remainingSecond = Math.round(duration) % 60
+    const formattedDuration = `${Math.floor(Math.round(duration)/60)}:${remainingSecond < 10 ? '0' + remainingSecond : remainingSecond}`
+    const closeSong = chosenPlaylistIndex !== 0 ? `<i class="fa-solid fa-xmark removeSong" style="display: none;" onclick="event.stopPropagation(); removeSongFromPlaylist('${id}', ${chosenPlaylistIndex})"></i>` : `<i data-lucide="trash" class="removeSong" style="display: none; color: #EC7E7E;" onclick="event.stopPropagation(); removeSong('${id}', ${chosenPlaylistIndex})"></i>`
+
+    const songInfoDiv = `
+        <div class="playlistItem" onclick="currentPlaylist=${chosenPlaylistIndex}; changeTrack('${song.id}', true); 
+                            window.matchMedia('(max-width: 600px)').matches && (document.getElementById('playlistBar').style.width = 0);"
+                            id='${song.id}:${chosenPlaylistIndex}'
+                            style="background:${(songs.indexOf(song)===playlist[currentPlaylist].list[currentSongIndex] && currentPlaylist === chosenPlaylistIndex) ? 
+                            'rgba(182, 182, 182, 0.38)' : 'null'};">
+            ${chosenPlaylistIndex !== 0 ? 
+                `<div class="songDragHandler" draggable="true">
+                    <i data-lucide="grip-vertical" style="width: 20px; height: 20px;"></i> 
+                </div>` : ''
+            }
+            <img src="${imageURL}" width="50px" alt="cover art">
+            <div>
+                <p>${song.songName}</p>
+                <p class="songListArtist">${song.artist}</p>
+            </div>
+            <div class="songListDuration">
+                <p>${formattedDuration}</p>
+                ${closeSong}
+            </div>
+        </div>
+    `
+
+    songList.insertAdjacentHTML('beforeend', songInfoDiv)
+    lucide.createIcons();   
 }
 
 async function renderPlaylist(chosenPlaylistIndex) {
@@ -85,40 +119,10 @@ async function renderPlaylist(chosenPlaylistIndex) {
     songList.innerHTML = null
     for (id of playlist[chosenPlaylistIndex].list) {
         const song = songs.find(song => song.id === id)
-        const imageFile = await getItem('imageFiles', song.id)
-        const imageURL = URL.createObjectURL(imageFile.blob)
-
         const duration = song.duration; 
-        const remainingSecond = Math.round(duration) % 60
-        const formattedDuration = `${Math.floor(Math.round(duration)/60)}:${remainingSecond < 10 ? '0' + remainingSecond : remainingSecond}`
-        const closeSong = chosenPlaylistIndex !== 0 ? `<i class="fa-solid fa-xmark removeSong" style="display: none;" onclick="event.stopPropagation(); removeSongFromPlaylist('${id}', ${chosenPlaylistIndex})"></i>` : `<i data-lucide="trash" class="removeSong" style="display: none; color: #EC7E7E;" onclick="event.stopPropagation(); removeSong('${id}', ${chosenPlaylistIndex})"></i>`
-
-        const songInfoDiv = `
-            <div class="playlistItem" onclick="currentPlaylist=${chosenPlaylistIndex}; changeTrack('${id}', true); 
-                                window.matchMedia('(max-width: 600px)').matches && (document.getElementById('playlistBar').style.width = 0);"
-                                id='${id}:${chosenPlaylistIndex}'
-                                style="background:${(songs.indexOf(song)===playlist[currentPlaylist].list[currentSongIndex] && currentPlaylist === chosenPlaylistIndex) ? 
-                                'rgba(182, 182, 182, 0.38)' : 'null'};">
-                ${chosenPlaylistIndex !== 0 ? 
-                    `<div class="songDragHandler" draggable="true">
-                        <i data-lucide="grip-vertical" style="width: 20px; height: 20px;"></i> 
-                    </div>` : ''
-                }
-                <img src="${imageURL}" width="50px" alt="cover art">
-                <div>
-                    <p>${song.songName}</p>
-                    <p class="songListArtist">${song.artist}</p>
-                </div>
-                <div class="songListDuration">
-                    <p>${formattedDuration}</p>
-                    ${closeSong}
-                </div>
-            </div>
-        `
-
         totalDuration += duration
-        songList.insertAdjacentHTML('beforeend', songInfoDiv)
-        lucide.createIcons();   
+
+        renderSongDiv(chosenPlaylistIndex, song, duration)
     }
 
     const {remainingHour, remainingMinute, remainingSecond} = getDuration(totalDuration)
@@ -406,15 +410,9 @@ imageFile.addEventListener("change", () => {
                 </p>
         ` 
         imageInput.querySelector("p").style.display = 'none'
+        document.getElementById('coverNote').innerText = 'Custom cover selected'
     } else {
-        imageInput.style.backgroundImage = 'none'
-        imageInput.innerHTML = `
-                <p>
-                    <i class="fa-regular fa-camera"></i>
-                    <br>
-                    Add cover image
-                </p>
-        ` 
+        setDefaultCover()
     }
 });
 
@@ -675,4 +673,5 @@ songPlaylistContainer.addEventListener("dragover", (e) => {
     }
 });
 
+setDefaultCover()
 lucide.createIcons();   

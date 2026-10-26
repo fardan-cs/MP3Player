@@ -3,6 +3,8 @@ const DB_VERSION = 5;
 
 let db;
 
+const DEFAULT_COVER = './default-cover.png'
+
 function openDatabase() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -133,9 +135,12 @@ async function init() {
 
     songs = await getAllItem('songs');
     playlist = await getAllItem('playlists');
-    
-    renderSong(playlist[0].list[0])
+
+    if (playlist[0]) {
+       renderSong(playlist[0].list[0]) 
+    } 
     renderPlaylistList()
+    updateEmptyState()
 }
 
 init();
@@ -146,9 +151,10 @@ async function addNewSongToPlaylist(id) {
     addItem('playlists', allPlaylist)
     playlist = await getAllItem('playlists');
     songs = await getAllItem('songs');
+    const song = songs.find(song => song.id === id)
+    const duration = song.duration; 
 
-    songs.length === 1 && renderSong(playlist[0].list[0])
-    document.getElementById('playlistInfo').style.display === 'block' && renderPlaylist(openedPlaylist)
+    chosenPlaylistIndex === 0 && document.getElementById('playlistInfo').style.display === 'block' && renderSongDiv(0, song, duration)
 }
 
 async function submitSong(event) {
@@ -157,7 +163,12 @@ async function submitSong(event) {
     const audioFileInput = document.getElementById("audioFile");
     const audioFile = audioFileInput.files[0];
     const imageURL = imageInput.style.backgroundImage
-    const imageFile = await downloadImage(imageURL.slice(5, -2));
+    let imageFile;
+    try {
+        imageFile = await downloadImage(imageURL ? imageURL.slice(5, -2) : DEFAULT_COVER);
+    } catch {
+        imageFile = await downloadImage(DEFAULT_COVER);
+    }
     const title = document.getElementById("title");
     const artist = document.getElementById("artist");
     const id = crypto.randomUUID()
@@ -168,8 +179,6 @@ async function submitSong(event) {
     if (!audioFile) {
         alert("Please select an audio file.");
         return;
-    } else if (!imageFile) {
-        alert("Please select cover art file")
     }
 
     audio.src = URL.createObjectURL(audioFile);
@@ -196,20 +205,10 @@ async function submitSong(event) {
     })
 
     await addNewSongToPlaylist(id)
-    imageInput.value = null
-    imageInput.style.backgroundImage = null
     audioFileInput.value = null
     title.value = null
     artist.value = null
-
-    imageInput.innerHTML = `
-            <p>
-                <i class="fa-regular fa-camera"></i>
-                <br>
-                Add Cover Image
-            </p>
-    ` 
-    imageInput.querySelector("p").style.display = 'block'
+    setDefaultCover()
 }
 
 document.getElementById("audioForm").addEventListener("submit", (event) => {
@@ -218,22 +217,30 @@ document.getElementById("audioForm").addEventListener("submit", (event) => {
 });
 
 async function findCoverInITunes(song, artist) {
-    const response = await fetch(
-    `https://itunes.apple.com/search?term=${song}-${artist}&entity=song&limit=20`
-    );
+    try {
+        const response = await fetch(
+            `https://itunes.apple.com/search?term=${encodeURIComponent(song + ' ' + artist)}&entity=song&limit=20`
+        );
+        const data = await response.json();
+        if (!data.results.length) {
+            setDefaultCover('No cover found: using default')
+        };
 
-    const data = await response.json();
-
-    const artwork = await getArtworkUrl(data.results[0].artworkUrl100)
-    imageInput.style.backgroundImage = `url(${artwork})`;
-    imageInput.innerHTML = `
+        const artwork = getArtworkUrl(data.results[0].artworkUrl100);
+        imageInput.style.backgroundImage = `url(${artwork})`;
+        imageInput.innerHTML = `
             <p>
                 <i class="fa-regular fa-camera"></i>
                 <br>
                 Change cover image
             </p>
-    ` 
-    imageInput.querySelector("p").style.display = 'none'
+        `;
+        imageInput.querySelector("p").style.display = 'none';
+        document.getElementById('coverNote').innerText = 'Cover found on iTunes';
+    } catch (e) {
+        console.warn("iTunes cover search failed:", e);
+        setDefaultCover('Cover search failed: using default');
+    }
 }
 
 function getArtworkUrl(url, size = 500) {
@@ -254,19 +261,7 @@ async function downloadImage(url) {
     return await response.blob();
 }
 
-async function removeLastSong() {
-    const allPlaylist = await getItem('playlists', 0)
-    const lastSongId = allPlaylist.list[allPlaylist.list.length-1]
-    removeItem('songs', lastSongId)
-    removeItem('audioFiles', lastSongId)
-    removeItem('imageFiles', lastSongId)
-    allPlaylist.list.pop()
-    addItem('playlists', allPlaylist)
-    playlist = await getAllItem('playlists');
-    songs = await getAllItem('songs');
-}
-
-async function removeSong(id, chosenPlaylistIndex) {
+async function removeSong(id) {
     removeItem('songs', id)
     removeItem('audioFiles', id)
     removeItem('imageFiles', id)
@@ -278,7 +273,9 @@ async function removeSong(id, chosenPlaylistIndex) {
         }
         addItem('playlists', playlist)
     })
-    document.getElementById('playlistInfo').style.display !== 'none' && renderPlaylist(chosenPlaylistIndex)
+
+    updateEmptyState()
+    document.getElementById(`${id}:${openedPlaylist}`).remove()
 }
 
 async function makeNewPlaylist(name, songs) {
@@ -309,4 +306,25 @@ async function removePlaylist(chosenPlaylistIndex) {
     document.getElementById('playlistName').innerText = 'Playlist';
 
     renderPlaylistList()
+}
+
+function updateEmptyState() {
+    const empty = !playlist[0];
+    console.log(empty)
+    document.getElementById('emptyState').style.display = empty ? 'flex' : 'none';
+    document.querySelector('.contents').style.display = empty ? 'none' : 'flex';
+}
+
+function setDefaultCover(note = 'No cover selected: default will be used') {
+    imageInput.style.backgroundImage = `url("${DEFAULT_COVER}")`;
+    imageInput.innerHTML = `
+        <p>
+            <i class="fa-regular fa-camera"></i>
+            <br>
+            Change cover image
+        </p>
+    `;
+    imageInput.querySelector('p').style.display = 'none';
+    document.getElementById('coverNote').innerText = note;
+    document.getElementById('imageFile').value = null;
 }

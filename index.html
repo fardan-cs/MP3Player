@@ -123,6 +123,8 @@
                 </p>
             </div>
             </label>
+            <p id="coverNote" style="font-size: 13px; color: #b6b6b6; margin: 0;"></p>
+            <a onclick="setDefaultCover('Using default cover')" style="font-size: 13px; cursor: pointer; text-decoration: underline;">Use default cover</a>
 
             <br><br>
 
@@ -181,33 +183,43 @@
         </div>
     </div>
     <div class="main">
-    <div style="position: fixed; left: 0px; top: 0px; padding: 20px; z-index: 3; cursor: pointer;" onclick="document.getElementById('playlistBar').style.width = '500px'">
-        <i data-lucide="list-music"></i>   
-    </div>
-    <div class="contents"> 
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <div class="songInfo">
-                <img src="" id="coverArt">
-                <p id="songName"></p>
-                <p id="songArtist" style="margin-bottom: 0;"></p>
-            </div>
-            <audio id="song" preload="metadata">
-                <source src="">
-            </audio>
-            <div class="controls">
-                <div id="seekbar" style="display: flex; flex-direction:column; margin-top: 10px; justify-content: center;">
-                    <input type="range" min="0" max="1000" value="0" id="durationSeekbar" style="width: 400px;">
-                    <div style="display: flex; justify-content: center;">
-                        <p id="currentTime">0:00/</p>
-                        <p id="duration">3:14</p>
-                    </div>
+        <div style="position: fixed; left: 0px; top: 0px; padding: 20px; z-index: 3; cursor: pointer;" onclick="document.getElementById('playlistBar').style.width = '500px'">
+            <i data-lucide="list-music"></i>   
+        </div>
+        <div id="emptyState" class="emptyState">
+            <i class="fa-solid fa-music" style="font-size: 50px;"></i>
+            <h2>No songs yet</h2>
+            <p>Drag and drop audio files anywhere,<br>or upload from the menu.</p>
+            <button onclick="document.getElementById('audioFormOverlay').style.display = 'block'">
+                <i class="fa-solid fa-plus"></i> Upload Song
+            </button>
+            <p class="emptyHint"><i data-lucide="list-music" style="width:16px;height:16px;vertical-align:middle;"></i> Open the playlist menu (top left) → Upload Song</p>
+        </div>
+        <div class="contents"> 
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <div class="songInfo">
+                    <img src="" id="coverArt">
+                    <p id="songName"></p>
+                    <p id="songArtist" style="margin-bottom: 0;"></p>
                 </div>
-                <div style="display: flex; justify-content: center; gap: 30px; align-items: center;">
-                    <button onclick="isShuffle = !isShuffle ; this.style.color = isShuffle? 'lime' : 'white';" class="buttons shuffle" id="shuffle"><i class="fa-solid fa-shuffle"></i></button>
-                    <button onclick="changeTrack(-1)" class="buttons backward"><i class="fa-solid fa-backward-step"></i></button>
-                    <button onclick="togglePlayback()" class="buttons play" id="playButton"><i class="fa-solid fa-play" ></i></button>
-                    <button onclick="changeTrack(1)" class="buttons forward"><i class="fa-solid fa-forward-step" ></i></button>
-                    <button onclick="isLooped = !isLooped; this.style.color = isLooped ? 'lime' : 'white';" class="buttons repeat" id="repeat"><i class="fa-solid fa-repeat"></i></button>
+                <audio id="song" preload="metadata">
+                    <source src="">
+                </audio>
+                <div class="controls">
+                    <div id="seekbar" style="display: flex; flex-direction:column; margin-top: 10px; justify-content: center;">
+                        <input type="range" min="0" max="1000" value="0" id="durationSeekbar" style="width: 400px;">
+                        <div style="display: flex; justify-content: center;">
+                            <p id="currentTime">0:00/</p>
+                            <p id="duration">3:14</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: center; gap: 30px; align-items: center;">
+                        <button onclick="isShuffle = !isShuffle ; this.style.color = isShuffle? 'lime' : 'white';" class="buttons shuffle" id="shuffle"><i class="fa-solid fa-shuffle"></i></button>
+                        <button onclick="changeTrack(-1)" class="buttons backward"><i class="fa-solid fa-backward-step"></i></button>
+                        <button onclick="togglePlayback()" class="buttons play" id="playButton"><i class="fa-solid fa-play" ></i></button>
+                        <button onclick="changeTrack(1)" class="buttons forward"><i class="fa-solid fa-forward-step" ></i></button>
+                        <button onclick="isLooped = !isLooped; this.style.color = isLooped ? 'lime' : 'white';" class="buttons repeat" id="repeat"><i class="fa-solid fa-repeat"></i></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -216,6 +228,7 @@
         <div id="volumeIcon"><i class="fa-solid fa-volume" ></i></div>
         <input type="range" min="0" max="100" value="20" class="volumeSlider" id="volumeSlider" oninput="updateSliderVisual(this)">
     </div>
+
 </body>
 <script src="db.js"></script>
 <script src="main.js"></script>
