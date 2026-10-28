@@ -1,10 +1,7 @@
 // TODO:
-// Priority:
-// Make a search song system for playlist managing
-// do the reorder playlist thing
 //
-// For later:
-// STYLE THE UI
+// CURRENT:
+// STYLE THE UI PLEASSSSEEEEEEE I WANT TS ON MY PORTFOLIO ASHJAKJSHAJKS
 //
 // that's it i think
 
@@ -28,13 +25,11 @@ const songAudio = document.getElementById('song')
 function addNewSong(songName, artist, art, audio, duration) {
     const newSong = new songItem(songName, artist, art, audio, duration)
     songs.push(newSong)
-    localStorage.setItem('songList', JSON.stringify(songs) || []) 
 }
 
 function addNewPlaylist(songName, artist, art, audio, duration) {
     const newPlaylist = new songItem(songName, artist, art, audio, duration)
     playlist.push(newPlaylist)
-    localStorage.setItem('playlistList', JSON.stringify(playlist) || []) 
 }
 
 async function removeSongFromPlaylist(id) {
@@ -45,6 +40,8 @@ async function removeSongFromPlaylist(id) {
         selectedPlaylist.list.splice(songIndex, 1); 
     }
 
+    console.log(id, openedPlaylist)
+    console.log(document.getElementById(`${id}:${openedPlaylist}`))
     document.getElementById(`${id}:${openedPlaylist}`).remove()
     addItem('playlists', selectedPlaylist)
 }
@@ -69,7 +66,7 @@ async function renderSongDiv(chosenPlaylistIndex, song, duration) {
 
     const remainingSecond = Math.round(duration) % 60
     const formattedDuration = `${Math.floor(Math.round(duration)/60)}:${remainingSecond < 10 ? '0' + remainingSecond : remainingSecond}`
-    const closeSong = chosenPlaylistIndex !== 0 ? `<i class="fa-solid fa-xmark removeSong" style="display: none;" onclick="event.stopPropagation(); removeSongFromPlaylist('${id}', ${chosenPlaylistIndex})"></i>` : `<i data-lucide="trash" class="removeSong" style="display: none; color: #EC7E7E;" onclick="event.stopPropagation(); removeSong('${id}', ${chosenPlaylistIndex})"></i>`
+    const closeSong = chosenPlaylistIndex !== 0 ? `<i class="fa-solid fa-xmark removeSong" style="display: none;" onclick="event.stopPropagation(); removeSongFromPlaylist('${song.id}', ${chosenPlaylistIndex})"></i>` : `<i data-lucide="trash" class="removeSong" style="display: none; color: #EC7E7E;" onclick="event.stopPropagation(); removeSong('${id}', ${chosenPlaylistIndex})"></i>`
 
     const songInfoDiv = `
         <div class="playlistItem" onclick="currentPlaylist=${chosenPlaylistIndex}; changeTrack('${song.id}', true); 
@@ -78,7 +75,7 @@ async function renderSongDiv(chosenPlaylistIndex, song, duration) {
                             style="background:${(songs.indexOf(song)===playlist[currentPlaylist].list[currentSongIndex] && currentPlaylist === chosenPlaylistIndex) ? 
                             'rgba(182, 182, 182, 0.38)' : 'null'};">
             ${chosenPlaylistIndex !== 0 ? 
-                `<div class="songDragHandler" draggable="true">
+                `<div class="songDragHandler">
                     <i data-lucide="grip-vertical" style="width: 20px; height: 20px;"></i> 
                 </div>` : ''
             }
@@ -113,7 +110,6 @@ async function renderPlaylist(chosenPlaylistIndex) {
     let totalDuration = 0
     openedPlaylist = chosenPlaylistIndex
 
-    const songList = document.getElementById('songList')
     songList.style.display='block';
 
     songList.innerHTML = null
@@ -147,6 +143,7 @@ async function renderPlaylist(chosenPlaylistIndex) {
     }
     document.getElementById('playlistName').innerText = truncateString(playlist[chosenPlaylistIndex].name)
     setPlaylistHighlight('rgb(182, 182, 182, 0.38)')
+
 }
 
 function shuffleSong() {
@@ -460,7 +457,7 @@ async function renderSongSelectionList(dom, isNew) {
         const imageURL = URL.createObjectURL(imageFile.blob)
 
         const songDiv = `
-            <label class="songSelectDiv" for="${id}" style="display: flex; align-items: center; justify-content: space-between; width: 500px; padding: 15px; margin: 0;">
+            <label class="songSelectDiv" for="${id}" data-name="${song.songName}" style="display: flex; align-items: center; justify-content: space-between; width: 500px; padding: 15px; margin: 0;">
                 <div style="display: flex; gap: 20px;">
                     <img src="${imageURL}" width="50px">
                     <div style="display: flex; flex-direction: column; text-align: left; justify-content: center;">
@@ -479,6 +476,7 @@ async function renderSongSelectionList(dom, isNew) {
             }
         }
     }
+    dom.insertAdjacentHTML("beforeend",`<p id="songNotFound" style="display: none;">The song is not in your library</p>`)
 }
 
 async function createPlaylist() {
@@ -614,63 +612,124 @@ function truncateString(str, maxLength=30) {
 
 const songPlaylistContainer = document.getElementById("songList");
 let draggedItem = null;
+let pointerId = null;
+let dragPlaylistId = null;
 
-songPlaylistContainer.addEventListener("dragstart", (e) => {
-  if (e.target.classList.contains("songDragHandler")) {
-    draggedItem = e.target.closest(".playlistItem");
+function resetDrag() {
+  if (draggedItem) draggedItem.classList.remove("dragging");
+  songPlaylistContainer.classList.remove("isDragging");
+  draggedItem = null;
+  pointerId = null;
+  dragPlaylistId = null;
+}
 
-    draggedItem.classList.add("dragging");
+function endDrag(e) {
+  if (!draggedItem || e.pointerId !== pointerId) return;
 
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", "");
-    console.log(draggedItem)
-  } else {
-    e.preventDefault();
+  const id = dragPlaylistId;
+  const items = [...songPlaylistContainer.querySelectorAll(".playlistItem")];
+  resetDrag();
+
+  const current = playlist.find((list) => list.id === id);
+  if (!current || id !== openedPlaylist) return;
+
+  const newPlaylist = items.map((item) => item.id.slice(0, -2));
+  addItem("playlists", { id, name: current.name, list: newPlaylist });
+  current.list = newPlaylist;
+}
+
+songPlaylistContainer.addEventListener("dragstart", (e) => e.preventDefault());
+
+songPlaylistContainer.addEventListener("pointerdown", (e) => {
+  const handle = e.target.closest(".songDragHandler");
+  if (!handle) return;
+
+  draggedItem = handle.closest(".playlistItem");
+  if (!draggedItem) return;
+
+  pointerId = e.pointerId;
+  dragPlaylistId = openedPlaylist;
+  songPlaylistContainer.setPointerCapture(pointerId);
+  draggedItem.classList.add("dragging");
+  songPlaylistContainer.classList.add("isDragging");
+});
+
+songPlaylistContainer.addEventListener("pointermove", (e) => {
+  if (!draggedItem || e.pointerId !== pointerId) return;
+  if (e.pointerType === "mouse" && e.buttons === 0) return endDrag(e);
+  e.preventDefault();
+
+  const items = [
+    ...songPlaylistContainer.querySelectorAll(".playlistItem:not(.dragging)")
+  ];
+  if (!items.length) return;
+
+  const y = e.clientY;
+  const target = items.find((item) => {
+    const r = item.getBoundingClientRect();
+    return y >= r.top && y <= r.bottom;
+  });
+
+  if (target) {
+    const isAbove =
+      target.compareDocumentPosition(draggedItem) &
+      Node.DOCUMENT_POSITION_FOLLOWING;
+    songPlaylistContainer.insertBefore(
+      draggedItem,
+      isAbove ? target : target.nextSibling
+    );
+  } else if (y < items[0].getBoundingClientRect().top) {
+    songPlaylistContainer.insertBefore(draggedItem, items[0]);
+  } else if (y > items[items.length - 1].getBoundingClientRect().bottom) {
+    songPlaylistContainer.appendChild(draggedItem);
   }
 });
 
-songPlaylistContainer.addEventListener("dragend", (e) => {
-    if (draggedItem) {
-        draggedItem.classList.remove("dragging");
-        draggedItem = null;
+// window-level so the drag always ends, even outside the container
+window.addEventListener("pointerup", endDrag);
+window.addEventListener("pointercancel", endDrag);
+window.addEventListener("blur", resetDrag);
+songPlaylistContainer.addEventListener("lostpointercapture", endDrag);
+
+document.addEventListener("keydown", (event) => {
+    const isPopupOpen = Array.from(document.querySelectorAll('.overlay'))
+    .find(el => getComputedStyle(el).display !== 'none')
+
+    if (event.key === "Escape" && isPopupOpen) {
+        isPopupOpen.style.display = 'none'; 
+        document.getElementById('songSelectionList').innerHTML = null     
+        document.getElementById('manageSongSelection').innerHTML = null     
     }
-
-    const items = document.querySelectorAll('.playlistItem')
-
-    const newPlaylist = []
-    items.forEach(item => {
-        newPlaylist.push(item.id.slice(0, -2))
-    })
-
-    addItem('playlists', {
-        id: openedPlaylist,
-        name: playlist.find(list => list.id === openedPlaylist).name, 
-        list: newPlaylist
-    })
-
-    playlist.find(list => list.id === openedPlaylist).list = newPlaylist
 });
 
-songPlaylistContainer.addEventListener("dragover", (e) => {
-    e.preventDefault();
+const searchBars = document.querySelectorAll('.searchSongInput')
 
-    if (!draggedItem) return;
+searchBars.forEach(input => {
+    input.addEventListener("keyup", () => {
+        const keyword = input.value.toLowerCase()
+        let songExist = false
 
-    const items = [
-        ...songPlaylistContainer.querySelectorAll(".playlistItem:not(.dragging)")
-    ];
+        document.querySelectorAll(".songSelectDiv").forEach(song => {
+            const songName = song.dataset.name.toLowerCase()
+            if (songName.includes(keyword)) {
+                song.style.display = 'flex'
+                songExist = true
+            } else {
+                song.style.display = 'none'
+            }
+        })
 
-    const nextItem = items.find((item) => {
-        const rect = item.getBoundingClientRect();
+        if (!songExist) {
+            document.getElementById('songNotFound').style.display = "block"
+        } else {
+            document.getElementById('songNotFound').style.display = "none"
+        }
+    })   
+})
 
-        return e.clientY < rect.top + rect.height / 2;
-    });
-
-    if (nextItem) {
-        songPlaylistContainer.insertBefore(draggedItem, nextItem);
-    } else {
-        songPlaylistContainer.appendChild(draggedItem);
-    }
+document.getElementById('audioFile').addEventListener('change', (e) => {
+  const fileName = e.target.files[0]?.name || 'No file selected';
+  document.getElementById('audioFileName').textContent = fileName;
 });
 
 setDefaultCover()

@@ -134,10 +134,12 @@ async function init() {
     songs = await getAllItem('songs');
     playlist = await getAllItem('playlists');
 
-    if (playlist[0]) {
-       renderSong(playlist[0].list[0]) 
-    } 
-    renderPlaylistList()
+    if (songs) {
+        if (playlist[0]) {
+        renderSong(playlist[0].list[0]) 
+        } 
+        renderPlaylistList()
+    }
     updateEmptyState()
 }
 
@@ -146,7 +148,6 @@ init();
 async function addNewSongToPlaylist(id) {
     let allPlaylist = await getItem('playlists', 0)
     !allPlaylist && (await makeNewPlaylist('All', []), allPlaylist = await getItem('playlists', 0))
-    console.log(allPlaylist)
     allPlaylist.list.push(id)
     addItem('playlists', allPlaylist)
     playlist = await getAllItem('playlists');
@@ -244,7 +245,7 @@ async function findCoverInITunes(song, artist) {
     }
 }
 
-function getArtworkUrl(url, size = 500) {
+function getArtworkUrl(url, size = 800) {
   return url.replace(
     /\/\d+x\d+bb\./,
     `/${size}x${size}bb.`

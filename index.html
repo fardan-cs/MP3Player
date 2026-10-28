@@ -35,8 +35,8 @@
             </div>
             <p id="playlistName" style="font-weight: 800;">Playlist</p>
             <input type="text" name="playlistName" id="playlistNameChange">
-            <i data-lucide="square-pen" style="width: 20px; height: 20px; display: none;" class="editPlaylistButton" id="editName" onclick="playlistNameChange()"></i>  
-            <i class="fa-solid fa-check" id="enterNewName" style="font-size: 18px; display: none;" onclick="renamePlaylist(openedPlaylist)"></i>
+            <i data-lucide="square-pen" style="width: 20px; height: 20px; display: none; cursor: pointer;" class="editPlaylistButton" id="editName" onclick="playlistNameChange()"></i>  
+            <i class="fa-solid fa-check" id="enterNewName" style="font-size: 18px; display: none; cursor: pointer;" onclick="renamePlaylist(openedPlaylist)"></i>
             <div style="color: #EC7E7E; position: absolute; right: 35px; cursor: pointer; display: flex; height: 50px; padding: 0px 10px 0px 10px; align-items: center;" onclick="handleDeletePlaylist()">
                 <i data-lucide="trash" style="width: 20px; height: 20px; display: none;" class="editPlaylistButton"></i>  
             </div>
@@ -87,19 +87,23 @@
     <div id="manageSongOverlay" class="overlay">
         <div class="modal" id="manageSongModal">
             <div style="display: flex; width: 100%; justify-content: space-between;">
-                <div>Manage playlist song</div>
+                <h2 style="margin-bottom: 10px;">Manage playlist</h2>
                 <div style="width: 50px; height: 30px; text-align: right; cursor: pointer;" onclick="document.getElementById('manageSongOverlay').style.display = 'none'; document.getElementById('manageSongSelection').innerHTML = null">
                     <i class="fa-solid fa-xmark"></i>
                 </div>
             </div>
-            <div id="manageSongSelection">
+            <div style="display: flex; justify-content: flex-start; text-align: left; flex-direction: column; width: 100%; margin-bottom: 10px;">
+                <p style="margin: 0; margin-bottom: 5px;">Search Song by Name</p>
+                <input type="text" autocomplete="off" class="searchSongInput" style="width: 90%;">
+            </div>
+            <div id="manageSongSelection" class="songList">
 
             </div>
-            <div style="display: flex; width: 25%; margin-left: auto; margin-right: 0; justify-content: space-between; margin-top: 10px; cursor: pointer;">
-                <div onclick="document.getElementById('manageSongOverlay').style.display = 'none'; document.getElementById('manageSongSelection').innerHTML = null">
+            <div style="display: flex; gap: 15px; width: fit-content; margin-left: auto; margin-right: 0; justify-content: space-between; margin-top: 10px; cursor: pointer;">
+                <div class="modalButton" onclick="document.getElementById('manageSongOverlay').style.display = 'none'; document.getElementById('manageSongSelection').innerHTML = null">
                     Discard
                 </div>
-                <div onclick="overwritePlaylist(openedPlaylist)" style="cursor: pointer;">
+                <div class="modalButton" onclick="overwritePlaylist(openedPlaylist)" style="cursor: pointer;">
                     Save
                 </div>
             </div>
@@ -110,10 +114,7 @@
             <div style="position: absolute; right: 5px; cursor: pointer; display: flex; height: 20px; padding: 0px 10px 0px 10px; align-items: center;" onclick="document.getElementById('audioFormOverlay').style.display = 'none';">
                 <i class="fa-solid fa-xmark"></i>
             </div>
-
-            <br><br>
-
-            <label>
+            <label style="margin-top: 30px;">
             <input type="file" id="imageFile" accept="image/*" style="display: none;">
             <div for="imageFile" id="imageFileInput">
                 <p>
@@ -123,60 +124,59 @@
                 </p>
             </div>
             </label>
-            <p id="coverNote" style="font-size: 13px; color: #b6b6b6; margin: 0;"></p>
-            <a onclick="setDefaultCover('Using default cover')" style="font-size: 13px; cursor: pointer; text-decoration: underline;">Use default cover</a>
-
-            <br><br>
-
-            <label>
-            <i class="fa-solid fa-music"></i>
-            Audio:
-            <input type="file" id="audioFile" accept="audio/*" required autocomplete="off">
+            <div>
+                <p id="coverNote" style="font-size: 13px; color: #b6b6b6; margin: 0;"></p>
+                <a onclick="setDefaultCover('Using default cover')" style="font-size: 13px; cursor: pointer; text-decoration: underline;">Use default cover</a>
+            </div>
+            <label style="display: flex; align-items: center; flex-direction: column;">
+                <input type="file" id="audioFile" accept="audio/*" required autocomplete="off" style="display: none;">
+                <label for="audioFile" class="custom-file-btn">
+                    <i class="fa-solid fa-music"></i>
+                    <span>Choose Audio File</span>
+                </label>
+                <span class="file-name" id="audioFileName">No file selected</span>
             </label>
 
-            <br><br>
+            <div class="field-group">
+                <label for="title" class="field-label">Title:</label>
+                <input type="text" id="title" class="text-input"/>
+            </div>
 
-            <label>
-            Title:
-            <input type="text" id="title" autocomplete="off" required>
-            </label>
+            <div class="field-group">
+                <label for="artist" class="field-label">Artist:</label>
+                <input type="text" id="artist" class="text-input"/>
+            </div>
 
-            <br><br>
-
-            <label>
-            Artist:
-            <input type="text" id="artist" autocomplete="off" required>
-            </label>
-
-            <br><br>
-
-            <button type="submit">Submit</button>
+            <button type="submit" class="modalButton">Save</button>
         </form>
     </div>
     <div id="songSelectionOverlay" class="overlay">
         <div id="songSelection" style="text-align: left;" class="modal">
             <div style="display: flex; width: 100%; justify-content: space-between;">
-                <div>Create New Playlist</div>
+                <h2 style="margin-bottom: 10px;">Create New Playlist</h2>
                 <div style="width: 50px; height: 30px; text-align: right; cursor: pointer;" onclick="document.getElementById('songSelectionOverlay').style.display = 'none'; document.getElementById('songSelectionList').innerHTML = null">
                     <i class="fa-solid fa-xmark"></i>
                 </div>
             </div>
-            <div style="display: flex; justify-content: flex-start; width: 100%; margin-bottom: 10px;">
-                <div>
-                    <p>Playlist Name</p>
-                    <input type="text" autocomplete="off" id="playlistNameInput">
-                </div>                    
+            <div style="display: flex; justify-content: flex-start; text-align: left; flex-direction: column; width: 100%; gap: 10px; margin-bottom: 10px;">
+                <p>Playlist Name</p>
+                <input type="text" autocomplete="off" id="playlistNameInput" style="width: 90%;">
+            </div>
+            <div style="display: flex; justify-content: flex-start; text-align: left; flex-direction: column; width: 100%; gap: 10px;">
+                <p>Search Song by Name</p>
+                <input type="text" autocomplete="off" class="searchSongInput" style="width: 90%;">
             </div>
             <div style="display: flex; justify-content: flex-start; width: 100%;">
                 <p>Add Songs</p>
             </div>
-            <div id="songSelectionList"> 
+            <div id="songSelectionList" class="songList"> 
+
             </div>
-            <div style="display: flex; width: 40%; margin-left: auto; margin-right: 0; justify-content: space-between; margin-top: 10px; cursor: pointer;">
-                <div onclick="document.getElementById('songSelectionOverlay').style.display = 'none'; document.getElementById('songSelectionList').innerHTML = null">
+            <div style="display: flex; gap: 15px; width: fit-content; margin-left: auto; margin-right: 0; justify-content: space-between; margin-top: 10px; cursor: pointer;">
+                <div class="modalButton" onclick="document.getElementById('songSelectionOverlay').style.display = 'none'; document.getElementById('songSelectionList').innerHTML = null">
                     Cancel
                 </div>
-                <div onclick="createPlaylist()" style="cursor: pointer;">
+                <div class="modalButton" onclick="createPlaylist()" style="cursor: pointer;">
                     Create Playlist
                 </div>
             </div>
